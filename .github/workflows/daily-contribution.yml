@@ -1,0 +1,35 @@
+name: Daily Contribution
+
+on:
+  schedule:
+    # Runs every day at 12:00 UTC (5:30 PM IST)
+    - cron: "0 12 * * *"
+  workflow_dispatch:
+
+# Let the workflow push commits
+permissions:
+  contents: write
+
+concurrency:
+  group: daily-contribution
+  cancel-in-progress: false
+
+jobs:
+  commit:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Configure Git author (you)
+        run: |
+          git config user.name "${{ github.actor }}"
+          git config user.email "${{ secrets.USER_EMAIL }}"
+
+      - name: Make an empty commit
+        run: |
+          git commit --allow-empty -m "chore: daily contribution $(date -u +'%Y-%m-%dT%H:%M:%SZ')"
+
+      - name: Push
+        run: git push
