@@ -1,18 +1,13 @@
-name: Daily Contribution
+name: Natural Daily Contributions
 
 on:
   schedule:
-    # Runs every day at 12:00 UTC (5:30 PM IST)
+    # Runs once a day at 12:00 UTC (5:30 PM IST)
     - cron: "0 12 * * *"
   workflow_dispatch:
 
-# Let the workflow push commits
 permissions:
   contents: write
-
-concurrency:
-  group: daily-contribution
-  cancel-in-progress: false
 
 jobs:
   commit:
@@ -22,14 +17,20 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Configure Git author (you)
+      - name: Configure Git author
         run: |
           git config user.name "${{ github.actor }}"
           git config user.email "${{ secrets.USER_EMAIL }}"
 
-      - name: Make an empty commit
+      - name: Random number of commits
         run: |
-          git commit --allow-empty -m "chore: daily contribution $(date -u +'%Y-%m-%dT%H:%M:%SZ')"
+          COMMITS=$(( ( RANDOM % 6 )  + 1 ))
+          echo "Making $COMMITS commits today"
+          for i in $(seq 1 $COMMITS); do
+            echo "$(date -u) - Commit $i" >> .keepalive
+            git add .keepalive
+            git commit -m "chore: daily contribution $i at $(date -u +'%Y-%m-%dT%H:%M:%SZ')"
+          done
 
-      - name: Push
+      - name: Push changes
         run: git push
